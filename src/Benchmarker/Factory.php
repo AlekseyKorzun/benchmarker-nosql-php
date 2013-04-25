@@ -1,6 +1,7 @@
 <?php
 namespace Benchmarker;
 
+use \ArrayObject;
 use \Exception;
 use \Redis;
 use \Memcache;
@@ -159,6 +160,26 @@ abstract class Factory
         if ($this->keys) {
             foreach ($this->keys as $key => $value) {
                 self::$client->set($key, $value);
+                self::$client->get($key);
+            }
+        }
+    }
+
+    /**
+     * Key test with larger objects
+     */
+    protected function test_keys_large()
+    {
+        if ($this->keys) {
+            // Create 'large' object
+            $object = new ArrayObject();
+
+            while($object->count() < 15) {
+                $object->append($object->getArrayCopy());
+            }
+
+            foreach (array_keys($this->keys) as $key) {
+                self::$client->set($key, $object);
                 self::$client->get($key);
             }
         }
