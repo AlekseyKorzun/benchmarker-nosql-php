@@ -1,0 +1,24 @@
+{
+	"name": "alekseykorzun/benchmarker-nosql-php",
+	"description": "Benchmark factory for NoSQL clients in PHP",
+	"keywords": ["php", "php5", "memcache", "memcached", "cache", "storage", "performance", "scalability", "caching", "optimization", "profile", "fast", "redis", "nosql", "benchmark"],
+	"homepage": "https://github.com/AlekseyKorzun/benchmarker-nosql-php",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Aleksey Korzun",
+			"email": "al.ko@webfoundation.net",
+			"homepage": "http://www.alekseykorzun.com",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": ">=5.3.0",
+        "predis/predis": "dev-master"
+	},
+	"autoload": {
+		"psr-0": {
+			"Benchmarker": "src/"
+		}
+	}
+}
