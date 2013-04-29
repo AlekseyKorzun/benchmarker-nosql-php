@@ -25,8 +25,6 @@ class Redis extends Factory
                 if (self::$client->hexists(self::KEY_HASH, $key)) {
                     self::$client->hget(self::KEY_HASH, $key);
                 }
-
-                self::$client->hgetall(self::KEY_HASH);
             }
         }
     }
@@ -86,7 +84,7 @@ class Redis extends Factory
                     self::$client->smove(self::KEY_SET, self::KEY_SET_TWO, $string);
                 }
 
-                self::$client->srandmember(self::KEY_SET);
+                self::$client->srandmember(self::KEY_SET_TWO);
             }
         }
     }

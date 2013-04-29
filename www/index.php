@@ -11,6 +11,7 @@ try {
     // Retrieve passed parameters
     $client = isset($_GET['client']) ? $_GET['client'] : false;
     $test = isset($_GET['test']) ? $_GET['test'] : false;
+    $serializer = isset($_GET['serializer']) ? $_GET['serializer'] : Factory::SERIALIZER_PHP;
 
     // Handle multiple tests passed with : delimiter
     if ($test) {
@@ -26,10 +27,16 @@ try {
     }
 
     // Initialize test scope and attempt to run requested tests
-    $benchmarker = Factory::instance($client);
-    $benchmarker->test($test);
+    $benchmarker = Factory::instance($client, $serializer);
+
+    if ($test == 'all') {
+        $benchmarker->all();
+    } else {
+        $benchmarker->test($test);
+    }
 } catch (Exception $exception) {
-    // Watch for non-200 responses when doing AB test!
     header('HTTP/1.1 500 Internal Server Error');
+    echo $exception->getMessage() . '<br>';
+    echo $exception->getFile() . ': ' . $exception->getLine();
     exit(1);
 }

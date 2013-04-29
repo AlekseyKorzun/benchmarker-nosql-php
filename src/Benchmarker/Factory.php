@@ -48,6 +48,20 @@ abstract class Factory
     const CLIENT_MEMCACHE = 'memcache';
 
     /**
+     * PHP serializer
+     *
+     * @var string
+     */
+    const SERIALIZER_PHP = 'php';
+
+    /**
+     * Igbinary serializer
+     *
+     * @var string
+     */
+    const SERIALIZER_IGBINARY = 'igbinary';
+
+    /**
      * Key space for increase test
      *
      * @var string
@@ -121,14 +135,33 @@ abstract class Factory
     protected static $client;
 
     /**
+     * Current serializer (used with object based tests)
+     *
+     * @var string
+     */
+    protected static $serializer;
+
+    /**
      * Get instance of client benchmarker
      *
      * @throws Exception
      * @param string $client
-     * @return Benchmarker_Memcached|Benchmarker_Redis
+     * @param string $serializer
+     * @return Benchmarker_Memcache|Benchmarker_Memcached|Benchmarker_Redis
      */
-    public static function instance($client)
+    public static function instance($client, $serializer = self::SERIALIZER_PHP)
     {
+        switch ($serializer) {
+            case self::SERIALIZER_IGBINARY:
+            case self::SERIALIZER_PHP:
+                self::$serializer = $serializer;
+                break;
+            default:
+                throw new Exception(
+                    'Serializer you passed is currently not supported.'
+                );
+        }
+
         switch ($client) {
             case self::CLIENT_PREDIS:
                 self::$client = new Predis();
@@ -153,16 +186,42 @@ abstract class Factory
     }
 
     /**
-     * Key test
+     * Serialize passed data
+     *
+     * @param object $data
+     * @return string
      */
-    protected function test_keys()
+    protected function serialize($data)
     {
-        if ($this->keys) {
-            foreach ($this->keys as $key => $value) {
-                self::$client->set($key, $value);
-                self::$client->get($key);
+        if (is_object($data)) {
+            if (self::$serializer == self::SERIALIZER_IGBINARY) {
+                return igbinary_serialize($data);
             }
+
+            return serialize($data);
         }
+
+        return $data;
+    }
+
+    /**
+     * Unserialize data
+     *
+     * @param $data
+     *
+     * @return object
+     */
+    protected function unserialize($data)
+    {
+        if (is_string($data)) {
+            if (self::$serializer == self::SERIALIZER_IGBINARY) {
+                return igbinary_unserialize($data);
+            }
+
+            return unserialize($data);
+        }
+
+        return $data;
     }
 
     /**
@@ -170,16 +229,32 @@ abstract class Factory
      */
     protected function test_keys_large()
     {
+        $client = self::$client;
+
         if ($this->keys) {
             // Create 'large' object
             $object = new ArrayObject();
 
-            while($object->count() < 15) {
+            while ($object->count() < 15) {
                 $object->append($object->getArrayCopy());
             }
 
             foreach (array_keys($this->keys) as $key) {
-                self::$client->set($key, $object);
+                $client->set($key, $this->serialize($object));
+            }
+
+            $this->unserialize($client->get($key));
+        }
+    }
+
+    /**
+     * Key test
+     */
+    protected function test_keys()
+    {
+        if ($this->keys) {
+            foreach ($this->keys as $key => $value) {
+                self::$client->set($key, $value);
                 self::$client->get($key);
             }
         }
