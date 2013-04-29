@@ -207,8 +207,7 @@ abstract class Factory
     /**
      * Unserialize data
      *
-     * @param $data
-     *
+     * @param string $data
      * @return object
      */
     protected function unserialize($data)
@@ -229,8 +228,6 @@ abstract class Factory
      */
     protected function test_keys_large()
     {
-        $client = self::$client;
-
         if ($this->keys) {
             // Create 'large' object
             $object = new ArrayObject();
@@ -240,10 +237,10 @@ abstract class Factory
             }
 
             foreach (array_keys($this->keys) as $key) {
-                $client->set($key, $this->serialize($object));
+                self::$client->set($key, $this->serialize($object));
             }
 
-            $this->unserialize($client->get($key));
+            $this->unserialize(self::$client->get($key));
         }
     }
 

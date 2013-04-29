@@ -26,6 +26,8 @@ class Redis extends Factory
                     self::$client->hget(self::KEY_HASH, $key);
                 }
             }
+
+            self::$client->hgetall(self::KEY_HASH);
         }
     }
 
