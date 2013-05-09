@@ -24,4 +24,13 @@ class Memcache extends Factory
         self::$client->decrement(self::KEY_INCREASE);
         self::$client->decrement(self::KEY_INCREASE);
     }
+
+    /**
+     * Multiple key test
+     */
+    protected function test_multiple_keys()
+    {
+        self::$client->set($this->keys);
+        self::$client->get(array_keys($this->keys));
+    }
 }

@@ -62,6 +62,13 @@ abstract class Factory
     const SERIALIZER_IGBINARY = 'igbinary';
 
     /**
+     * Internal serializer
+     *
+     * @var string
+     */
+    const SERIALIZER_INTERNAL = 'internal';
+
+    /**
      * Key space for increase test
      *
      * @var string
@@ -152,6 +159,7 @@ abstract class Factory
     public static function instance($client, $serializer = self::SERIALIZER_PHP)
     {
         switch ($serializer) {
+            case self::SERIALIZER_INTERNAL:
             case self::SERIALIZER_IGBINARY:
             case self::SERIALIZER_PHP:
                 self::$serializer = $serializer;
@@ -196,9 +204,9 @@ abstract class Factory
         if (is_object($data)) {
             if (self::$serializer == self::SERIALIZER_IGBINARY) {
                 return igbinary_serialize($data);
+            } else if (self::$serializer == self::SERIALIZER_PHP) {
+                return serialize($data);
             }
-
-            return serialize($data);
         }
 
         return $data;
@@ -215,9 +223,9 @@ abstract class Factory
         if (is_string($data)) {
             if (self::$serializer == self::SERIALIZER_IGBINARY) {
                 return igbinary_unserialize($data);
+            } else if (self::$serializer == self::SERIALIZER_PHP) {
+                return unserialize($data);
             }
-
-            return unserialize($data);
         }
 
         return $data;
@@ -228,6 +236,18 @@ abstract class Factory
      */
     protected function test_keys_large()
     {
+        $client = self::$client;
+
+        // Toggle igbinary serializer based on parameters
+        if (method_exists($client, 'setOption')) {
+            if (self::$serializer == self::SERIALIZER_INTERNAL) {
+                $client->setOption($client::OPT_SERIALIZER, $client::SERIALIZER_IGBINARY);
+            } else {
+                $client->setOption($client::OPT_SERIALIZER, $client::SERIALIZER_PHP);
+            }
+        }
+
+        // Enable it only if we requested it
         if ($this->keys) {
             // Create 'large' object
             $object = new ArrayObject();
@@ -237,10 +257,10 @@ abstract class Factory
             }
 
             foreach (array_keys($this->keys) as $key) {
-                self::$client->set($key, $this->serialize($object));
+                $client->set($key, $this->serialize($object));
             }
 
-            $this->unserialize(self::$client->get($key));
+            $this->unserialize($client->get($key));
         }
     }
 
